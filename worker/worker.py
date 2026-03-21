@@ -1,16 +1,6 @@
 import time
 import requests
-import django
-import os
-import sys
 from datetime import timedelta
-
-# Fix path so Django project is found
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-django.setup()
 
 from django.utils.timezone import now
 from django.db import transaction
