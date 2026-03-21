@@ -1,0 +1,8 @@
+Django>=5.0
+djangorestframework
+djangorestframework-simplejwt
+psycopg2-binary
+requests
+gunicorn
+python-dotenv
+dj-database-url

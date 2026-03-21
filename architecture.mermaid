@@ -1,0 +1,17 @@
+graph TD
+    User([User Client])
+    API[Django REST API Service]
+    DB[(PostgreSQL Database)]
+    Worker[Background Worker Service]
+    Remote[External API/Target URL]
+
+    User -- "POST /api/tasks (JWT Auth)" --> API
+    API -- "Create Task (status=PENDING)" --> DB
+    
+    Worker -- "Polls tasks (execute_at <= now, PENDING)" --> DB
+    DB -- "Returns locked rows (skip_locked=True)" --> Worker
+    
+    Worker -- "HTTP POST with payload" --> Remote
+    Remote -- "200 OK / 4xx / 5xx" --> Worker
+    
+    Worker -- "Update Task (status=SUCCESS or FAILED+Retry)" --> DB

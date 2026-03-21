@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexTask | Premium Task Scheduler</title>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-dark: #0f1115;
+            --bg-surface: #1e2128;
+            --bg-elevated: #282c34;
+            --text-primary: #f8f9fa;
+            --text-secondary: #a0a6b1;
+            --accent-glow: rgba(99, 102, 241, 0.5);
+            --accent-primary: #6366f1;
+            --accent-hover: #4f46e5;
+            --status-success: #10b981;
+            --status-success-bg: rgba(16, 185, 129, 0.1);
+            --status-pending: #f59e0b;
+            --status-pending-bg: rgba(245, 158, 11, 0.1);
+            --status-failed: #ef4444;
+            --status-failed-bg: rgba(239, 68, 68, 0.1);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.05), transparent 25%);
+        }
+
+        /* Generic Inputs and Buttons */
+        input, select, textarea {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: rgba(255,255,255,0.05);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button.primary {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+        }
+
+        button.primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        button.danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--status-failed);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        button.danger:hover {
+            background: var(--status-failed);
+            color: white;
+        }
+
+        button.ghost {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        button.ghost:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* --- AUTH VIEW --- */
+        #auth-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            height: 100vh;
+        }
+
+        .auth-card {
+            background: var(--bg-surface);
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .auth-card h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #a0a6b1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-card p {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .auth-form-group {
+            margin-bottom: 20px;
+        }
+
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* --- DASHBOARD VIEW --- */
+        #dashboard-view {
+            display: none; /* hidden by default */
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(30, 33, 40, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: var(--accent-primary);
+            font-size: 1.5rem;
+        }
+
+        .main-container {
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-header {
+            grid-column: 1 / -1;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .dashboard-header p {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Card panels */
+        .panel {
+            background: rgba(30, 33, 40, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 16px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Status Pills */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status.pending {
+            background: var(--status-pending-bg);
+            color: var(--status-pending);
+        }
+
+        .status.success {
+            background: var(--status-success-bg);
+            color: var(--status-success);
+        }
+
+        .status.failed {
+            background: var(--status-failed-bg);
+            color: var(--status-failed);
+        }
+
+        .status.cancelled {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 16px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        
+        .toast.success { border-left: 4px solid var(--status-success); }
+        .toast.error { border-left: 4px solid var(--status-failed); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(10px); }
+        }
+
+        /* Spinner */
+        .spinner {
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- AUTHENTICATION VIEW -->
+    <div id="auth-view">
+        <div class="auth-card">
+            <h1>Welcome Back</h1>
+            <p>Sign in to access NexTask Scheduler</p>
+            
+            <form id="login-form">
+                <div class="auth-form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="admin">
+                </div>
+                <div class="auth-form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="primary" style="width: 100%; margin-top: 10px;" id="login-btn">
+                    <span>Sign In</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="ph-fill ph-rocket-launch"></i> NexTask
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <span id="user-greeting" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                <button class="ghost" onclick="logout()">
+                    <i class="ph ph-sign-out"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <div class="main-container">
+            <div class="dashboard-header">
+                <h2>Task Dashboard</h2>
+                <p>Manage and monitor your scheduled webhook requests in real-time.</p>
+            </div>
+
+            <!-- Create Task Panel -->
+            <div class="panel" style="animation: fadeIn 0.4s ease-out 0.1s both;">
+                <h3 class="panel-title">
+                    <i class="ph ph-plus-circle"></i> Schedule New Task
+                </h3>
+                <form id="schedule-form">
+                    <div class="form-group">
+                        <label>Target Webhook URL</label>
+                        <input type="url" id="task-url" placeholder="https://api.example.com/webhook" required>
+                    </div>
+                    <div class="form-group">
+                        <label>JSON Payload</label>
+                        <textarea id="task-payload" rows="5" placeholder='{"event": "trigger", "data": "value"}' style="font-family: monospace;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Execution Time (Local Time)</label>
+                        <input type="datetime-local" id="task-time" required>
+                    </div>
+                    <button type="submit" class="primary" style="width: 100%; margin-top: 10px;" id="schedule-btn">
+                        <i class="ph ph-calendar-plus"></i> Schedule Execute
+                    </button>
+                </form>
+            </div>
+
+            <!-- Task List Panel -->
+            <div class="panel" style="animation: fadeIn 0.4s ease-out 0.2s both;">
+                <h3 class="panel-title" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="ph ph-list-dashes"></i> Scheduled Tasks
+                    </div>
+                    <button class="ghost" onclick="fetchTasks()" title="Refresh Tasks" style="padding: 6px 12px;">
+                        <i class="ph ph-arrows-clockwise"></i>
+                    </button>
+                </h3>
+                
+                <div class="table-container">
+                    <table id="task-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Target URL</th>
+                                <th>Status</th>
+                                <th>Scheduled For</th>
+                                <th>Retries</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-list-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        // API Base configuration
+        const API_URL = '/api';
+
+        // --- DOM Elements ---
+        const authView = document.getElementById('auth-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const loginForm = document.getElementById('login-form');
+        const scheduleForm = document.getElementById('schedule-form');
+        const taskListBody = document.getElementById('task-list-body');
+        const loginBtn = document.getElementById('login-btn');
+        const scheduleBtn = document.getElementById('schedule-btn');
+
+        // --- Toast System ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '<i class="ph-fill ph-check-circle" style="color: var(--status-success); font-size: 1.25rem;"></i>' : '<i class="ph-fill ph-warning-circle" style="color: var(--status-failed); font-size: 1.25rem;"></i>';
+            
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- Auth Logic ---
+        function getTokens() {
+            return {
+                access: localStorage.getItem('access_token'),
+                refresh: localStorage.getItem('refresh_token')
+            };
+        }
+
+        // --- Auto Refresh ---
+        let refreshInterval;
+
+        function checkAuth() {
+            const tokens = getTokens();
+            if (tokens.access) {
+                authView.style.display = 'none';
+                dashboardView.style.display = 'flex';
+                fetchTasks();
+                if (!refreshInterval) {
+                    refreshInterval = setInterval(fetchTasks, 5000); // Auto-refresh every 5 seconds
+                }
+            } else {
+                authView.style.display = 'flex';
+                dashboardView.style.display = 'none';
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            checkAuth();
+            showToast('Logged out successfully', 'success');
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const btnText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<div class="spinner"></div>';
+            loginBtn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/token/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                    showToast('Authentication successful!');
+                    loginForm.reset();
+                    checkAuth();
+                } else {
+                    const error = await res.json();
+                    showToast(error.detail || 'Invalid credentials', 'error');
+                }
+            } catch (err) {
+                showToast('Network error occurred', 'error');
+            } finally {
+                loginBtn.innerHTML = btnText;
+                loginBtn.disabled = false;
+            }
+        });
+
+        // --- API Helper ---
+        async function fetchWithAuth(url, options = {}) {
+            let tokens = getTokens();
+            
+            if (!tokens.access) {
+                logout();
+                throw new Error("No access token");
+            }
+
+            options.headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${tokens.access}`
+            };
+
+            let response = await fetch(url, options);
+
+            // Simple handling: if 401, we just logout for now
+            // To be robust, we should try refreshing the token here.
+            if (response.status === 401) {
+                logout();
+                showToast('Session expired. Please login again.', 'error');
+                throw new Error("Unauthorized");
+            }
+
+            return response;
+        }
+
+        // --- Tasks Logic ---
+        async function fetchTasks() {
+            try {
+                const res = await fetchWithAuth(`${API_URL}/tasks/`);
+                if (res.ok) {
+                    const tasks = await res.json();
+                    renderTasks(tasks);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderTasks(tasks) {
+            if (tasks.length === 0) {
+                taskListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="ph ph-calendar-blank"></i>
+                                <p>No tasks scheduled yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            taskListBody.innerHTML = tasks.map(task => {
+                const date = new Date(task.execute_at).toLocaleString();
+                const statusClass = task.status.toLowerCase();
+                const shortId = task.id.split('-')[0];
+                
+                let actionBtn = '';
+                if (task.status === 'PENDING') {
+                    actionBtn = `
+                        <button class="danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="cancelTask('${task.id}')">
+                            <i class="ph ph-x"></i> Cancel
+                        </button>
+                    `;
+                }
+
+                return `
+                    <tr style="animation: fadeIn 0.3s ease-out forwards;">
+                        <td style="font-family: monospace; color: var(--text-secondary);">${shortId}</td>
+                        <td title="${task.url}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${task.url}
+                        </td>
+                        <td>
+                            <span class="status ${statusClass}">${task.status}</span>
+                        </td>
+                        <td>${date}</td>
+                        <td>${task.retry_count} / ${task.max_retries}</td>
+                        <td>${actionBtn}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        scheduleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payloadStr = document.getElementById('task-payload').value;
+            let payloadObj = {};
+            
+            if (payloadStr.trim() !== '') {
+                try {
+                    payloadObj = JSON.parse(payloadStr);
+                } catch (e) {
+                    showToast('Invalid JSON in payload', 'error');
+                    return;
+                }
+            }
+
+            const data = {
+                url: document.getElementById('task-url').value,
+                payload: payloadObj,
+                execute_at: new Date(document.getElementById('task-time').value).toISOString()
+            };
+
+            const btnText = scheduleBtn.innerHTML;
+            scheduleBtn.innerHTML = '<div class="spinner"></div>';
+            scheduleBtn.disabled = true;
+
+            try {
+                const res = await fetchWithAuth(`${API_URL}/tasks/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    showToast('Task scheduled successfully');
+                    scheduleForm.reset();
+                    fetchTasks();
+                } else {
+                    const err = await res.json();
+                    showToast(JSON.stringify(err), 'error');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                scheduleBtn.innerHTML = btnText;
+                scheduleBtn.disabled = false;
+            }
+        });
+
+        window.cancelTask = async function(taskId) {
+            if (!confirm('Are you sure you want to cancel this task?')) return;
+
+            try {
+                const res = await fetchWithAuth(`${API_URL}/tasks/${taskId}/`, {
+                    method: 'DELETE'
+                });
+
+                if (res.ok) {
+                    showToast('Task cancelled');
+                    fetchTasks();
+                } else {
+                    showToast('Failed to cancel task', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // --- Init ---
+        // Set min datetime for schedule input to current time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('task-time').min = now.toISOString().slice(0, 16);
+
+        checkAuth();
+    </script>
+</body>
+</html>

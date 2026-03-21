@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME:-scheduler_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nikhil123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    restart: always
+    command: >
+      bash -c "sleep 5 && 
+               python manage.py makemigrations && 
+               python manage.py migrate && 
+               gunicorn core.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - DB_HOST=db
+    depends_on:
+      - db
+
+  worker:
+    build: .
+    restart: always
+    command: bash -c "sleep 7 && python worker/worker.py"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - DB_HOST=db
+    depends_on:
+      - db
+      - api
+
+volumes:
+  postgres_data:
