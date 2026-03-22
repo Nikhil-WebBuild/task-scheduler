@@ -1,6 +1,13 @@
-# Scheduled Notification Service (NexTask)
+# Scheduled Notification Service (NexTask) 
 
 A distributed background service for scheduling and executing time-delayed webhooks and notifications. Built with Django, PostgreSQL, and a standalone Background Worker process.
+
+---
+
+## 🌐 Live Demo
+👉 https://task-scheduler-gvsn.onrender.com
+
+---
 
 ## 🚀 Features
 - **REST API & Web UI Dashboard**: Complete control over your scheduled tasks via the modern Web UI or raw APIs.
@@ -8,6 +15,15 @@ A distributed background service for scheduling and executing time-delayed webho
 - **Robust Error Handling**: External HTTP call failures trigger an exponential backoff retry mechanism (5, 15, 45 mins).
 - **Concurrency Safe**: Uses PostgreSQL row-level locking (`select_for_update(skip_locked=True)`) to prevent duplicate execution across multiple workers.
 - **Containerized**: Full Docker Compose setup for instant deployment.
+
+---
+
+## 🛠️ Tech Stack
+- Django
+- PostgreSQL
+- Docker
+- Background Worker (Python)
+- Render (Deployment)
 
 ---
 
@@ -133,3 +149,10 @@ A user books a doctor's appointment for Friday at 10:00 AM. You want the system 
   ```
 - **`execute_at`**: `2026-03-25T08:00:00Z` (Friday, 8:00 AM)
 - **Result**: The background worker securely holds the task and executes the HTTP POST request right when Friday 8:00 AM arrives.
+
+---
+
+
+## 🙋‍♂️ Author
+**Nikhil Suthar**  
+Backend Developer | Aspiring Full Stack Developer
