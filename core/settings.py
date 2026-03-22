@@ -84,13 +84,20 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 import dj_database_url
 
-# For Render and standard production deployments, use DATABASE_URL.
-# Fallbacks to individual DB environment variables or defaults for local dev.
-default_db_url = f"postgres://{os.environ.get('DB_USER', 'postgres')}:{os.environ.get('DB_PASSWORD', 'nikhil123')}@{os.environ.get('DB_HOST', 'localhost')}:{os.environ.get('DB_PORT', '5432')}/{os.environ.get('DB_NAME', 'scheduler_db')}"
+# PostgreSQL configuration
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASSWORD = os.environ.get("DB_PASSWORD", "nikhil123")
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME", "scheduler_db")
 
+# Default local database URL
+default_db_url = f"postgres://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Use DATABASE_URL in production (Render), fallback to default for local
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', default_db_url),
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL", default_db_url),
         conn_max_age=600,
         conn_health_checks=True,
     )
