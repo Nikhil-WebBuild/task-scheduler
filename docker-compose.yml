@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -16,9 +14,9 @@ services:
     build: .
     restart: always
     command: >
-      bash -c "sleep 5 && 
-               python manage.py makemigrations && 
-               python manage.py migrate && 
+      bash -c "sleep 5 &&
+               python manage.py makemigrations &&
+               python manage.py migrate &&
                gunicorn core.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/app
@@ -31,21 +29,6 @@ services:
       - DB_HOST=db
     depends_on:
       - db
-
-  worker:
-    build: .
-    restart: always
-    command: bash -c "sleep 7 && python worker/worker.py"
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    environment:
-      - DJANGO_SETTINGS_MODULE=core.settings
-      - DB_HOST=db
-    depends_on:
-      - db
-      - api
 
 volumes:
   postgres_data:

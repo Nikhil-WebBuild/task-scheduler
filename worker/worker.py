@@ -10,19 +10,19 @@ def handle_failure(task, error_msg):
     task.retry_count += 1
     if task.retry_count >= task.max_retries:
         task.status = "FAILED"
-        print(f"❌ Task {task.id} failed permanently: {error_msg}")
+        print(f"[FAILED] Task {task.id} failed permanently: {error_msg}")
     else:
         task.status = "PENDING"
         # Exponential backoff: 5, 15, 45 mins
         delay_minutes = 5 * (3 ** (task.retry_count - 1))
         task.execute_at = now() + timedelta(minutes=delay_minutes)
-        print(f"⚠️ Task {task.id} failed, retrying in {delay_minutes} mins. Attempt {task.retry_count}/{task.max_retries} ({error_msg})")
+        print(f"[RETRY] Task {task.id} failed, retrying in {delay_minutes} mins. Attempt {task.retry_count}/{task.max_retries} ({error_msg})")
         
     task.last_attempt = now()
     task.save(update_fields=["status", "retry_count", "execute_at", "last_attempt"])
 
 def run_worker():
-    print("🚀 Worker started...")
+    print("[START] Worker started...")
 
     while True:
         current_time = now()
@@ -48,7 +48,7 @@ def run_worker():
             continue
 
         if task:
-            print(f"⚡ Executing task {task.id}")
+            print(f"[RUN] Executing task {task.id}")
             
             try:
                 response = requests.post(
@@ -61,7 +61,7 @@ def run_worker():
                     task.status = "SUCCESS"
                     task.last_attempt = now()
                     task.save(update_fields=["status", "last_attempt"])
-                    print(f"✅ Task {task.id} completed")
+                    print(f"[OK] Task {task.id} completed")
                 else:
                     handle_failure(task, f"status {response.status_code}")
 
@@ -72,4 +72,8 @@ def run_worker():
             time.sleep(5)  # No tasks ready, wait 5 seconds
 
 if __name__ == "__main__":
+    import os
+    import django
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+    django.setup()
     run_worker()
