@@ -72,6 +72,9 @@ def run_worker():
             time.sleep(5)  # No tasks ready, wait 5 seconds
 
 if __name__ == "__main__":
+    # django.setup() is only called when the worker is run directly (e.g. python worker/worker.py).
+    # When imported by Django itself via tasks/apps.py, Django is already set up,
+    # so calling django.setup() again would raise a RuntimeError (populate() isn't reentrant).
     import os
     import django
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
